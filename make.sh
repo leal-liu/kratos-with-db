@@ -6,4 +6,4 @@ go build -mod=readonly \
 -o kucd github.com/KuChainNetwork/kuchain/cmd/kucd && \
 upx kucd && \
 scp kucd root@ks02:/data/db_backend && \
-ssh -t root@ks02 "cd /data/db_backend && ./bi.sh && docker-compose down && rm -rf ./data ./logs && docker-compose up -d"
+ssh -t root@ks02 "cd /data/db_backend && ./bi.sh && docker-compose down && docker-compose up -d"

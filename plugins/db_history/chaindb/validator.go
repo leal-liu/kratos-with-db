@@ -32,6 +32,10 @@ type EventValidator struct {
 }
 
 func vExec(db *pg.DB, model EventValidator, logger log.Logger) error {
+	if len(model.Address) <= 0 || len(model.ConsensusPubkey) <= 0 {
+		return nil
+	}
+
 	var m EventValidator
 	err := orm.NewQuery(db, &m).Where(fmt.Sprintf("Address='%s' ", model.Address)).Select()
 	if err != nil {
