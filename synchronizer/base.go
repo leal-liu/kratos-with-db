@@ -39,6 +39,7 @@ func (object *Base) Sync(timeout time.Duration) (code int, raw []byte, err error
 		return
 	}
 	code = res.StatusCode()
-	raw = res.Body()
+	raw = make([]byte, len(res.Body()))
+	copy(raw, res.Body())
 	return
 }
