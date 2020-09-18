@@ -55,6 +55,9 @@ func vExecUpdate(db *pg.DB, addr string, logger log.Logger) error {
 	if err != nil {
 		logger.Debug("vExecUpdate1", "model", m)
 		//err = orm.Insert(db, &m)
+		if len(m.Address) <= 0 || len(m.ConsensusPubkey) <= 0 {
+			return nil
+		}
 		_, err = db.Model(&m).Insert()
 	} else {
 		m.Jailed = "true"
@@ -70,6 +73,9 @@ func vExecUpdate2(db *pg.DB, sender string, logger log.Logger) error {
 	if err != nil {
 		logger.Debug("vExecUpdate21", "model", m)
 		//err = orm.Insert(db, &m)
+		if len(m.Address) <= 0 || len(m.ConsensusPubkey) <= 0 {
+			return nil
+		}
 		_, err = db.Model(&m).Insert()
 	} else {
 		m.Jailed = "true"
