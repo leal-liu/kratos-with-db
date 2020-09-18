@@ -1,0 +1,21 @@
+{
+  "plugins": [
+    {
+      "name": "db-history",
+      "cfg": {
+        "db": {
+          "address": "localhost:5432",
+          "user": "pguser",
+          "password": "123456",
+          "database": "kuchaindb"
+        },
+        "account_coins_sync": true,
+        "distribution_reward_sync": true,
+        "chain": {
+          "host": "121.89.216.155",
+          "port": 80
+        }
+      }
+    }
+  ]
+}
