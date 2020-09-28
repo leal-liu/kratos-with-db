@@ -3,6 +3,7 @@ package chaindb
 import (
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/KuChainNetwork/kuchain/plugins/db_history/types"
 	"github.com/KuChainNetwork/kuchain/utils/eventutil"
@@ -38,50 +39,60 @@ type CreateAccCoinsModel struct {
 
 const minCoinSymbol = len("0s\t")
 
-func MakeCoinSql(msg EventAccCoins, n ...int32) CreateAccCoinsModel {
-	coin, _ := NewCoin(msg.Amount)
+func MakeCoinSql(msg EventAccCoins, n ...int32) []CreateAccCoinsModel {
+	tempAmountStrList := strings.Split(msg.Amount, ",")
 
-	m := CreateAccCoinsModel{
-		Height:      msg.Height,
-		Amount:      coin.Amount,
-		AmountFloat: coin.AmountFloat,
-		Symbol:      coin.Symbol,
-		Account:     msg.Account,
-		Time:        msg.Time,
+	result := make([]CreateAccCoinsModel, 0, len(tempAmountStrList))
+	for _, amount := range tempAmountStrList {
+		coin, _ := NewCoin(amount)
+
+		m := CreateAccCoinsModel{
+			Height:      msg.Height,
+			Amount:      coin.Amount,
+			AmountFloat: coin.AmountFloat,
+			Symbol:      coin.Symbol,
+			Account:     msg.Account,
+			Time:        msg.Time,
+		}
+
+		if len(n) > 0 && n[0] < 0 {
+			m.Amount = m.Amount * -1
+			m.AmountFloat = m.AmountFloat * -1
+		}
+		result = append(result, m)
 	}
 
-	if len(n) > 0 && n[0] < 0 {
-		m.Amount = m.Amount * -1
-		m.AmountFloat = m.AmountFloat * -1
-	}
-
-	return m
+	return result
 }
 
-func acExec(db *pg.DB, model CreateAccCoinsModel, logger log.Logger) error {
-	var m CreateAccCoinsModel
-	err := orm.NewQuery(db, &m).Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).Select()
-	if err != nil {
-		logger.Debug("acExec1", "model", model)
-		//err = orm.Insert(db, &model)
-		_, err = db.Model(&model).Insert()
-	} else {
-		model.Amount, model.AmountFloat = CoinAdd(model.Amount, model.AmountFloat, m.Amount, m.AmountFloat)
-		logger.Debug("acExec2", "model", model)
-		_, err = orm.NewQuery(db, &model).
-			Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).
-			Set(fmt.Sprintf("height=%d, time='%s'", model.Height, model.Time)).Update()
-	}
-	if err == nil {
-		_, err = orm.NewQuery(db, &model).
-			Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).
-			Set(fmt.Sprintf("amount=%d, amount_float=%d", model.Amount, model.AmountFloat)).Update()
+func acExec(db *pg.DB, modelList []CreateAccCoinsModel, logger log.Logger) error {
+	for _, model := range modelList {
+		var m CreateAccCoinsModel
+		err := orm.NewQuery(db, &m).Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).Select()
+		if err != nil {
+			logger.Debug("acExec1", "model", model)
+			//err = orm.Insert(db, &model)
+			_, err = db.Model(&model).Insert()
+		} else {
+			model.Amount, model.AmountFloat = CoinAdd(model.Amount, model.AmountFloat, m.Amount, m.AmountFloat)
+			logger.Debug("acExec2", "model", model)
+			_, err = orm.NewQuery(db, &model).
+				Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).
+				Set(fmt.Sprintf("height=%d, time='%s'", model.Height, model.Time)).Update()
+		}
+		if err == nil {
+			_, err = orm.NewQuery(db, &model).
+				Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).
+				Set(fmt.Sprintf("amount=%d, amount_float=%d", model.Amount, model.AmountFloat)).Update()
 
-		_, err = orm.NewQuery(db, &model).
-			Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).
-			Set("sync_state = ?", 0).Update()
+			_, err = orm.NewQuery(db, &model).
+				Where(fmt.Sprintf("Symbol='%s' and account='%s'", model.Symbol, model.Account)).
+				Set("sync_state = ?", 0).Update()
+		} else {
+			return err
+		}
 	}
-	return err
+	return nil
 }
 
 func EventAccCoinsAdd(db *pg.DB, logger log.Logger, evt *types.Event) {

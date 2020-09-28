@@ -64,7 +64,7 @@ func makeDelegationChangeSql(DeMsg DelegationChange, isAdd bool) CreateDelegatio
 func EventDelegationChange(db *pg.DB, logger log.Logger, evt *types.Event, isAdd bool) {
 	var DMsg DelegationChange
 
-	fmt.Println("[INFO]  EventDelegationChange.EventDelegationChange-Attributes", evt.Attributes, "Type", evt.Type)
+	//fmt.Println("[INFO]  EventDelegationChange.EventDelegationChange-Attributes", evt.Attributes, "Type", evt.Type)
 
 	err := eventutil.UnmarshalKVMap(evt.Attributes, &DMsg)
 	if err != nil {
@@ -72,11 +72,11 @@ func EventDelegationChange(db *pg.DB, logger log.Logger, evt *types.Event, isAdd
 		return
 	}
 
-	fmt.Println("[INFO]  EventDelegationChange.EventDelegationChange-UnmarshalAttributes", DMsg.Amount)
+	//fmt.Println("[INFO]  EventDelegationChange.EventDelegationChange-UnmarshalAttributes", DMsg.Amount)
 
 	q := makeDelegationChangeSql(DMsg, isAdd)
 
-	fmt.Println("[INFO]  EventDelegationChange.EventDelegationChange-makeChangeSql", q.Amount, q.AmountFloat)
+	//fmt.Println("[INFO]  EventDelegationChange.EventDelegationChange-makeChangeSql", q.Amount, q.AmountFloat)
 
 	logger.Debug("EventDelegationChange", "CreateDelegationChangeModel", q)
 	//err = orm.Insert(db, &q)
