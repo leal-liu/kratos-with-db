@@ -247,7 +247,7 @@ func buildTxMsg(logger log.Logger, m json.RawMessage, tx *txInDB, uid int64, sen
 			iMsg.From = extra.DelegatorAccountId
 			//iMsg.To = "kudistribution"
 			iMsg.Sender = extra.DelegatorAccountId
-		case "asset/lockData", "asset/unlockData", "asset/burnData":
+		case "asset/lockData", "asset/unlockData", "asset/burnData", "asset/exerciseData":
 			type Extra struct {
 				Id string `json:"id"`
 			}

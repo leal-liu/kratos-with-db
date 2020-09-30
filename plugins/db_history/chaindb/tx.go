@@ -45,7 +45,6 @@ type Signature struct {
 }
 
 func makeTxmSql(tm ptypes.ReqTx) CreateTxModel {
-
 	bz, _ := json.Marshal(tm.Msgs)
 	Msg := string(bz)
 
@@ -245,7 +244,7 @@ func makeTxmSql(tm ptypes.ReqTx) CreateTxModel {
 			q.From = extra.DelegatorAccountId
 			//q.To = "kudistribution"
 			q.Sender = extra.DelegatorAccountId
-		case "asset/lockData", "asset/unlockData", "asset/burnData":
+		case "asset/lockData", "asset/unlockData", "asset/burnData", "asset/exerciseData":
 			type Extra struct {
 				Id string `json:"id"`
 			}
