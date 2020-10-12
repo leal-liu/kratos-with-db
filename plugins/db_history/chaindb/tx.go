@@ -25,7 +25,7 @@ type CreateTxModel struct {
 	Fee        string `json:"fee"`
 	Signatures string `json:"signatures"`
 	Memo       string `json:"memo"`
-	RawLog     string `json:"raw_log"`
+	RawLog     string `json:"raw_log" pg:"raw_log,type:jsonb"`
 	To         string `json:"to"`
 	From       string `json:"from"`
 	Sender     string `json:"sender"`
