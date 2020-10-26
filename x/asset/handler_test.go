@@ -114,8 +114,8 @@ func TestCreateAsset(t *testing.T) {
 		var (
 			symbol     = types.MustName("abcd")
 			demon      = types.CoinDenom(name4, symbol)
-			maxSupply  = types.NewCoin(demon, types.NewInt(10000000000000))
-			initSupply = types.NewCoin(demon, types.NewInt(0))
+			maxSupply  = types.Coin{demon, types.NewInt(10000000000000)}
+			initSupply = types.Coin{demon, types.NewInt(0)}
 			desc       = []byte(make([]byte, assetTypes.CoinDescriptionLen+1))
 		)
 

@@ -13,11 +13,13 @@ const (
 	EventTypeUnlock   = "unlock"
 	EventTypePayFee   = "payfee"
 	EventTypeExercise = "exercise"
+	EventTypeApprove  = "approve"
 )
 
 const (
 	AttributeKeyFrom              = "from"
 	AttributeKeyTo                = "to"
+	AttributeKeySpender       = "spender"
 	AttributeKeyAmount            = "amount"
 	AttributeKeyCreator           = "creator"
 	AttributeKeySymbol            = "symbol"
