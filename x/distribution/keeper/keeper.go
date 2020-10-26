@@ -176,7 +176,6 @@ func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards chainTypes.DecCoi
 // The amount is first added to the distribution module account and then directly
 // added to the pool. An error is returned if the amount cannot be sent to the
 // module account.
-
 func (k Keeper) FundCommunityPool(ctx sdk.Context, amount Coins, sender chainTypes.AccountID) error {
 	ctx.Logger().Debug("FundCommunityPool", "amount", amount, "sender", sender)
 

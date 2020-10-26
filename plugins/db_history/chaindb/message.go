@@ -39,23 +39,24 @@ func processMsg(db *pg.DB, msg sdk.Msg) error {
 	}
 
 	if msg, ok := msg.(chainTypes.KuTransfMsg); ok {
-		amounts := msg.GetAmount()
+		transfers := msg.GetTransfers()
 
-		in := &KuTransferInDB{
-			Route: msg.Route(),
-			Type:  msg.Type(),
-			From:  msg.GetFrom().String(),
-			To:    msg.GetTo().String(),
-		}
+		for _, t := range transfers {
+			amounts := t.Amount
 
-		for _, amount := range amounts {
-			in.Amount = amount.Amount.BigInt().Int64()
-			in.Symbol = amount.Denom
-			if _, err := db.Model(in).Insert(); err != nil {
-				if err != nil {
-					EventErr(db, nil, NewErrMsg(err))
+			in := &KuTransferInDB{
+				Route: msg.Route(),
+				Type:  msg.Type(),
+				From:  t.From.String(),
+				To:    t.To.String(),
+			}
+
+			for _, amount := range amounts {
+				in.Amount = amount.Amount.BigInt().Int64()
+				in.Symbol = amount.Denom
+				if _, err := db.Model(in).Insert(); err != nil {
+					return err
 				}
-				return err
 			}
 		}
 	}

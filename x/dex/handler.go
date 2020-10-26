@@ -64,7 +64,7 @@ func handleMsgCreateDex(ctx chainTypes.Context, k Keeper, msg *types.MsgCreateDe
 		return nil, errors.Wrapf(err, "msg create dex %s", msgData.Creator)
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeCreateDex,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyCreator, msgData.Creator.String()),
@@ -101,7 +101,7 @@ func handleMsgUpdateDexDescription(ctx chainTypes.Context,
 		return
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeUpdateDexDescription,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyCreator, msgData.Creator.String()),
@@ -129,7 +129,7 @@ func handleMsgDestroyDex(ctx chainTypes.Context,
 		return
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeDestroyDex,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyCreator, msgData.Creator.String()),
@@ -174,7 +174,7 @@ func handleMsgCreateSymbol(ctx chainTypes.Context,
 		return
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeCreateSymbol,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyCreator, data.Creator.String()),
@@ -249,7 +249,7 @@ func handleMsgUpdateSymbol(ctx chainTypes.Context,
 	}
 	attributes = append(attributes, sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory))
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeUpdateSymbol,
 			attributes...,
 		),
@@ -282,7 +282,7 @@ func handleMsgPauseSymbol(ctx chainTypes.Context,
 		return
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypePauseSymbol,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyCreator, data.Creator.String()),
@@ -318,7 +318,7 @@ func handleMsgRestoreSymbol(ctx chainTypes.Context,
 		return
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeRestoreSymbol,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyCreator, data.Creator.String()),
@@ -354,7 +354,7 @@ func handleMsgShutdownSymbol(ctx chainTypes.Context,
 		return
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeShutdownSymbol,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyCreator, data.Creator.String()),
@@ -384,7 +384,7 @@ func handleMsgDexSigIn(ctx chainTypes.Context, k Keeper, msg *types.MsgDexSigIn)
 	}
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeDexSigIn,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyUser, msgData.User.String()),
@@ -419,7 +419,7 @@ func handleMsgDexSigOut(ctx chainTypes.Context, k Keeper, msg *types.MsgDexSigOu
 	}
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeDexSigOut,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyUser, msgData.User.String()),
@@ -453,7 +453,7 @@ func handleMsgDexDeal(ctx chainTypes.Context, k Keeper, msg *types.MsgDexDeal) (
 	fee1, fee2 := msg.GetDealFeeByDex()
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
+		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeDexDeal,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyDex, msgData.Dex.String()),

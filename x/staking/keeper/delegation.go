@@ -338,7 +338,6 @@ func (k Keeper) HasReceivingRedelegation(ctx sdk.Context,
 	if ok && constants.IsSystemAccount(name) {
 		return false
 	}
-
 	store := ctx.KVStore(k.storeKey)
 	prefix := types.GetREDsByDelToValDstIndexKey(delAddr, valDstAddr)
 	iterator := sdk.KVStorePrefixIterator(store, prefix)

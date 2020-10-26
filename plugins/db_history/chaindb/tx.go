@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/KuChainNetwork/kuchain/plugins/db_history/types"
@@ -272,6 +273,10 @@ func makeTxmSql(tm ptypes.ReqTx) CreateTxModel {
 			//q.To = "kustaking"
 			q.Sender = extra.ValidatorAccount
 		}
+	}
+
+	if q.Height == 1828 {
+		fmt.Println("------------------>", q.TxHash)
 	}
 
 	return q

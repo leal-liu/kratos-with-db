@@ -4,17 +4,23 @@
       "name": "db-history",
       "cfg": {
         "db": {
-          "address": "localhost:5432",
-          "user": "pguser",
+          "address": "127.0.0.1:5432",
+          "user": "postgres",
           "password": "123456",
-          "database": "kuchaindb"
+          "database": "postgres"
         },
         "account_coins_sync": true,
         "distribution_reward_sync": true,
         "chain": {
-          "host": "121.89.216.155",
-          "port": 80
-        }
+          "host": "ks01",
+          "port": 46680
+        },
+        "redis": {
+          "address": "127.0.0.1:6379",
+          "password": "",
+          "db": 0
+        },
+        "main_coins_symbol": "kratos/kts"
       }
     }
   ]
