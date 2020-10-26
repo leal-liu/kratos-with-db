@@ -57,7 +57,7 @@ func (c Context) WithAuths(auths []AccAddress) Context {
 	return c
 }
 
-func (c Context) isHasAuth(auth AccAddress) bool {
+func (c Context) IsHasAuth(auth AccAddress) bool {
 	for _, a := range c.auths {
 		if a.Equals(auth) {
 			return true
@@ -79,7 +79,7 @@ func (c Context) isAllowAccountAuth(auth Name) bool {
 
 func (c Context) CheckAuths() error {
 	for _, auth := range c.authStats.requireAuths {
-		if !c.isHasAuth(auth) {
+		if !c.IsHasAuth(auth) {
 			return sdkerrors.Wrapf(ErrMissingAuth, "missing auth %s", auth)
 		}
 	}
@@ -94,7 +94,7 @@ func (c Context) CheckAuths() error {
 			return sdkerrors.Wrapf(err, "missing account %s auth", n)
 		}
 
-		if !c.isHasAuth(auth) {
+		if !c.IsHasAuth(auth) {
 			return sdkerrors.Wrapf(ErrMissingAuth, "missing auth %s by account %s", auth, n)
 		}
 	}
@@ -133,25 +133,12 @@ func (c Context) Authorize(account ...Name) {
 
 // RequireTransfer require transfer coin large then amount for to
 func (c Context) RequireTransfer(to AccountID, amount Coins) error {
-	if !c.msg.GetTo().Equals(&to) {
-		return ErrTransfNotTo
+	transfers := c.msg.GetTransfers()
+	for _, t := range transfers {
+		if t.To.Eq(to) && t.Amount.IsAllGTE(amount) {
+			return nil
+		}
 	}
 
-	if !c.msg.GetAmount().IsAllGTE(amount) {
-		return ErrTransfNoEnough
-	}
-
-	return nil
-}
-
-// GetTransf get transfer info from msg
-func (c Context) GetTransf() (from, to AccountID, amount Coins) {
-	if c.msg == nil {
-		return
-	}
-
-	from = c.msg.GetFrom()
-	to = c.msg.GetTo()
-	amount = c.msg.GetAmount()
-	return
+	return ErrTransfNoEnough
 }

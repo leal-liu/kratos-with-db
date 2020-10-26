@@ -11,6 +11,12 @@ var (
 	AccAddressFromBech32 = sdk.AccAddressFromBech32
 )
 
+type (
+	StoreKey          = sdk.StoreKey
+	KVStoreKey        = sdk.KVStoreKey
+	TransientStoreKey = sdk.TransientStoreKey
+)
+
 // MustAccAddressFromBech32 AccAddressFromBech32 if error then panic
 func MustAccAddressFromBech32(str string) AccAddress {
 	res, err := AccAddressFromBech32(str)

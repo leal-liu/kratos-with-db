@@ -23,8 +23,10 @@ func WarpHandler(transfer AssetTransfer, auther AccountAuther, h Handler) sdk.Ha
 		kuCtx := NewKuMsgCtx(ctx.WithEventManager(sdk.NewEventManager()), auther, msg)
 		kuCtx = kuCtx.WithAuths(msg.GetSigners())
 
-		if kuMsg, ok := msg.(KuTransfMsg); ok {
-			if err := onHandlerKuMsg(kuCtx, transfer, kuMsg); err != nil {
+		kuMsg, ok := msg.(KuTransfMsg)
+
+		if ok {
+			if err := onHandlerKuMsg(kuCtx, transfer, auther, kuMsg); err != nil {
 				return nil, err
 			}
 		}
@@ -38,32 +40,85 @@ func WarpHandler(transfer AssetTransfer, auther AccountAuther, h Handler) sdk.Ha
 			return nil, err
 		}
 
-		plugins.HandleEvent(ctx, types2.ReqEvents{BlockHeight: ctx.BlockHeight(), Events: res.Events})
+		plugins.HandleEvent(ctx, res.Events)
 
 		return res, err
 	}
 }
 
+func getAuthByAccountID(ctx Context, auther AccountAuther, id AccountID) (AccAddress, error) {
+	if add, ok := id.ToAccAddress(); ok {
+		return add, nil
+	}
+
+	if name, ok := id.ToName(); ok {
+		authByAccount, err := auther.GetAuth(ctx.Context(), name)
+		if err != nil {
+			return nil, err
+		}
+
+		return authByAccount, nil
+	}
+
+	return nil, types.ErrMissingAuth
+}
+
+func checkTransferAuth(ctx Context, transfer AssetTransfer, auther AccountAuther, msg types.KuMsgTransfer) (bool, error) {
+	fromAuth, err := getAuthByAccountID(ctx, auther, msg.From)
+	if err != nil {
+		// no found from auth, there must be a error, even no need from auth
+		return false, sdkerrors.Wrapf(err, "get from auth error")
+	}
+
+	// check is has fromAuth
+	if ctx.IsHasAuth(fromAuth) {
+		return false, nil // has fromAuth, so it checked ok
+	}
+
+	// if is from has approve to with amt
+	toAuth, err := getAuthByAccountID(ctx, auther, msg.To)
+	if err != nil {
+		// no found to auth, there must be a error, even no need to auth
+		// that means account can not approve to module account
+		return false, sdkerrors.Wrapf(err, "get to auth error")
+	}
+
+	if ctx.IsHasAuth(toAuth) {
+		if err := transfer.ApplyApporve(ctx.Context(), msg.From, msg.To, msg.Amount); err == nil {
+			// if apply apporve success, then checked ok
+			return true, nil
+		}
+	}
+
+	return false, types.ErrMissingAuth
+}
+
 // onHandlerKuMsg handler Ku msg for transfer
-func onHandlerKuMsg(ctx Context, k AssetTransfer, msg KuTransfMsg) error {
-	from := msg.GetFrom()
-	to := msg.GetTo()
-	amount := msg.GetAmount()
+func onHandlerKuMsg(ctx Context, k AssetTransfer, auther AccountAuther, msg KuTransfMsg) error {
+	transfers := msg.GetTransfers()
 
-	if from.Empty() || to.Empty() || amount.IsZero() || from.Eq(to) {
-		return nil
-	}
+	for _, t := range transfers {
+		from := t.From
+		to := t.To
+		amount := t.Amount
 
-	// check validate for safe
-	if err := msg.ValidateTransfer(); err != nil {
-		return err
-	}
+		if from.Empty() || to.Empty() || amount.IsZero() || from.Eq(to) {
+			continue
+		}
 
-	ctx.RequireAuth(msg.GetFrom())
+		// check validate for safe
+		if err := msg.ValidateTransfer(); err != nil {
+			return err
+		}
 
-	if err := k.Transfer(ctx.Context(), from, to, amount); err != nil {
-		return err
-	}
+		isApplyApprove, err := checkTransferAuth(ctx, k, auther, t)
+		if err != nil {
+			return err
+		}
+
+		if err := k.TransferDetail(ctx.Context(), from, to, amount, isApplyApprove); err != nil {
+			return err
+		}
 
 	ctx.EventManager().EmitEvent(
 		types.NewEvent(ctx.Context(),
@@ -74,6 +129,7 @@ func onHandlerKuMsg(ctx Context, k AssetTransfer, msg KuTransfMsg) error {
 			sdk.NewAttribute(AttributeKeyAmount, amount.String()),
 		),
 	)
+	}
 
 	return nil
 }
