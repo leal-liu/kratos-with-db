@@ -41,7 +41,7 @@ func WarpHandler(transfer AssetTransfer, auther AccountAuther, h Handler) sdk.Ha
 			return nil, err
 		}
 
-		plugins.HandleEvent(ctx, res.Events)
+		plugins.HandleEvent(ctx, types2.ReqEvents{BlockHeight: ctx.BlockHeight(), Events: res.Events})
 
 		return res, err
 	}
@@ -121,15 +121,15 @@ func onHandlerKuMsg(ctx Context, k AssetTransfer, auther AccountAuther, msg KuTr
 			return err
 		}
 
-	ctx.EventManager().EmitEvent(
-		types.NewEvent(ctx.Context(),
-			EventTypeTransfer,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.KuCodeSpace),
-			sdk.NewAttribute(AttributeKeyFrom, from.String()),
-			sdk.NewAttribute(AttributeKeyTo, to.String()),
-			sdk.NewAttribute(AttributeKeyAmount, amount.String()),
-		),
-	)
+		ctx.EventManager().EmitEvent(
+			types.NewEvent(ctx.Context(),
+				EventTypeTransfer,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.KuCodeSpace),
+				sdk.NewAttribute(AttributeKeyFrom, from.String()),
+				sdk.NewAttribute(AttributeKeyTo, to.String()),
+				sdk.NewAttribute(AttributeKeyAmount, amount.String()),
+			),
+		)
 	}
 
 	return nil
