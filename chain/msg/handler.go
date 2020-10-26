@@ -41,7 +41,7 @@ func WarpHandler(transfer AssetTransfer, auther AccountAuther, h Handler) sdk.Ha
 			return nil, err
 		}
 
-		plugins.HandleEvent(ctx, types2.ReqEvents{BlockHeight: ctx.BlockHeight(), Events: res.Events})
+		plugins.HandleEvent(ctx, res.Events)
 
 		return res, err
 	}

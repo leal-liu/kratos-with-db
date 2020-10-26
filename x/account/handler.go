@@ -79,7 +79,6 @@ func handleMsgCreateAccount(ctx chainTypes.Context, k Keeper, msg *types.MsgCrea
 			sdk.NewAttribute(types.AttributeKeyCreator, msgData.Creator.String()),
 			sdk.NewAttribute(types.AttributeKeyAccount, msgData.Name.String()),
 			sdk.NewAttribute(types.AttributeKeyAuth, msgData.Auth.String()),
-			sdk.NewAttribute(types.AttributeKeyHeight, strconv.FormatInt(ctx.BlockHeight(), 10)),
 		),
 	})
 
