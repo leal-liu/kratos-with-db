@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	chainTypes "github.com/KuChainNetwork/kuchain/chain/types"
-
+	"github.com/KuChainNetwork/kuchain/chain/store"
 	"github.com/KuChainNetwork/kuchain/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +50,7 @@ func (k Keeper) AddPubkey(ctx sdk.Context, pubkey crypto.PubKey) {
 
 // GetPubkey returns the pubkey from the adddress-pubkey relation
 func (k Keeper) GetPubkey(ctx sdk.Context, address crypto.Address) (crypto.PubKey, error) {
-	store := ctx.KVStore(k.storeKey)
+	store := store.NewStore(ctx, k.storeKey)
 
 	var pubkey gogotypes.StringValue
 	err := k.cdc.UnmarshalBinaryBare(store.Get(types.GetAddrPubkeyRelationKey(address)), &pubkey)
@@ -95,13 +95,13 @@ func (k Keeper) Jail(ctx sdk.Context, consAcc sdk.ConsAddress) {
 }
 
 func (k Keeper) setAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address, pubkey string) {
-	store := ctx.KVStore(k.storeKey)
+	store := store.NewStore(ctx, k.storeKey)
 
 	bz := k.cdc.MustMarshalBinaryBare(&gogotypes.StringValue{Value: pubkey})
 	store.Set(types.GetAddrPubkeyRelationKey(addr), bz)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr crypto.Address) {
-	store := ctx.KVStore(k.storeKey)
+	store := store.NewStore(ctx, k.storeKey)
 	store.Delete(types.GetAddrPubkeyRelationKey(addr))
 }

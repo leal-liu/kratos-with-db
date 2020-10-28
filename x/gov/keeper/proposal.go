@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	chainTypes "github.com/KuChainNetwork/kuchain/chain/types"
-
+	"github.com/KuChainNetwork/kuchain/chain/store"
 	"github.com/KuChainNetwork/kuchain/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,7 +52,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, content types.Content) (typ
 
 // GetProposal get proposal from store by ProposalID
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Proposal, bool) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := store.NewStore(ctx, keeper.storeKey)
 
 	bz := store.Get(types.ProposalKey(proposalID))
 	if bz == nil {
@@ -67,7 +67,7 @@ func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (types.Prop
 
 // SetProposal set a proposal to store
 func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := store.NewStore(ctx, keeper.storeKey)
 
 	bz, err := keeper.MarshalProposal(proposal)
 	if err != nil {
@@ -79,7 +79,7 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal types.Proposal) {
 
 // DeleteProposal deletes a proposal from store
 func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := store.NewStore(ctx, keeper.storeKey)
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
 		panic(fmt.Sprintf("couldn't find proposal with id#%d", proposalID))
@@ -91,7 +91,7 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 
 // IterateProposals iterates over the all the proposals and performs a callback function
 func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal types.Proposal) (stop bool)) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := store.NewStore(ctx, keeper.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 	defer iterator.Close()
@@ -163,7 +163,7 @@ func (keeper Keeper) GetProposalsFiltered(ctx sdk.Context, params types.QueryPro
 
 // GetProposalID gets the highest proposal ID
 func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err error) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := store.NewStore(ctx, keeper.storeKey)
 	bz := store.Get(types.ProposalIDKey)
 	if bz == nil {
 		return 0, sdkerrors.Wrap(types.ErrInvalidGenesis, "initial proposal ID hasn't been set")
@@ -175,7 +175,7 @@ func (keeper Keeper) GetProposalID(ctx sdk.Context) (proposalID uint64, err erro
 
 // SetProposalID sets the new proposal ID to the store
 func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
-	store := ctx.KVStore(keeper.storeKey)
+	store := store.NewStore(ctx, keeper.storeKey)
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
