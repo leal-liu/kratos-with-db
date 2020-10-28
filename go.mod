@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/99designs/keyring v1.1.4 // indirect
-	github.com/cosmos/cosmos-sdk v0.38.5
+	github.com/cosmos/cosmos-sdk v0.39.1
 	github.com/go-pg/pg/v10 v10.0.6
 	github.com/go-redis/redis/v8 v8.0.0
 	github.com/gogo/protobuf v1.3.1
@@ -21,7 +21,7 @@ require (
 	github.com/spf13/viper v1.6.3
 	github.com/stretchr/testify v1.6.1
 	github.com/tendermint/go-amino v0.15.1
-	github.com/tendermint/tendermint v0.33.6
+	github.com/tendermint/tendermint v0.33.8
 	github.com/tendermint/tm-db v0.5.1
 	github.com/valyala/fasthttp v1.16.0
 	go.uber.org/zap v1.13.0

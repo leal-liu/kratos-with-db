@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/KuChainNetwork/kuchain/chain/store"
+	chainTypes "github.com/KuChainNetwork/kuchain/chain/types"
 	"github.com/KuChainNetwork/kuchain/x/gov/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
