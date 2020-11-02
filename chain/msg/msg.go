@@ -21,8 +21,9 @@ var (
 // NewKuMsg create kuMsg by router and opts
 func NewKuMsg(router Name, opts ...Option) (*KuMsg, error) {
 	res := &KuMsg{
-		Auth:      make([]AccAddress, 0, 4),
-		Router:    router,
+		Auth:   make([]AccAddress, 0, 4),
+		Router: router,
+		//Transfers: make([]types.KuMsgTransfer, 0, 2),
 	}
 
 	for _, opt := range opts {

@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/KuChainNetwork/kuchain/chain/msg"
 	"github.com/KuChainNetwork/kuchain/chain/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -183,6 +184,10 @@ func NewMsgDexDeal(auth types.AccAddress, dex AccountID, from, to AccountID, fro
 			}),
 		),
 	}
+}
+
+func (msg MsgDexDeal) GetSigners() []sdk.AccAddress {
+	return msg.Auth
 }
 
 func (msg MsgDexDeal) GetDealByDex() (AccountID, Coins, AccountID, Coins) {

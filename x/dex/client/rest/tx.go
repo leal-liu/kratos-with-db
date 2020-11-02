@@ -255,7 +255,6 @@ func createSymbolHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 				name,
 				&req.Base,
 				&req.Quote,
-				req.DomainAddress,
 				time.Time{}, // use server time
 			),
 		})

@@ -118,7 +118,7 @@ func (object *Symbol) WithPaused(paused bool) *Symbol {
 func (object *Symbol) Validate() bool {
 	return object.Quote.Validate() &&
 		object.Base.Validate() &&
-		0 < len(object.DomainAddress) &&
+		//0 < len(object.DomainAddress) &&
 		0 < object.Height &&
 		!object.CreateTime.IsZero()
 }
@@ -132,7 +132,7 @@ func (object *Symbol) Paused() bool {
 func (object *Symbol) Equal(other *Symbol) bool {
 	return object.Base.Equal(&other.Base) &&
 		object.Quote.Equal(&other.Quote) &&
-		object.DomainAddress == other.DomainAddress &&
+		//object.DomainAddress == other.DomainAddress &&
 		object.Height == other.Height &&
 		object.CreateTime.Equal(other.CreateTime) &&
 		object.IsPaused == other.IsPaused
@@ -146,5 +146,5 @@ func NewEmptySymbol() *Symbol {
 // NewSymbol new currency with base currency and quote currency
 func NewSymbol(base *BaseCurrency, quote *QuoteCurrency,
 	domainAddress string) *Symbol {
-	return &Symbol{Base: *base, Quote: *quote, DomainAddress: domainAddress}
+	return &Symbol{Base: *base, Quote: *quote /*DomainAddress: domainAddress*/}
 }
