@@ -170,11 +170,11 @@ func BenchmarkTestMinting(t *testing.B) {
 	tests := []struct {
 		bondedRatio sdk.Dec
 	}{
-		{sdk.ZeroDec()},
-		{sdk.NewDecWithPrec(33, 2)},
-		{sdk.NewDecWithPrec(5, 1)},
-		{sdk.NewDecWithPrec(67, 2)},
-		{sdk.OneDec()},
+		{sdk.ZeroDec(),},
+		{sdk.NewDecWithPrec(33, 2),},
+		{sdk.NewDecWithPrec(5, 1),},
+		{sdk.NewDecWithPrec(67, 2),},
+		{sdk.OneDec(),},
 	}
 	for _, tc := range tests {
 		totalStakingSupply := sdk.NewInt(140000000)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+        "github.com/KuChainNetwork/kuchain/chain/store"
 	chaintypes "github.com/KuChainNetwork/kuchain/chain/types"
 	"github.com/KuChainNetwork/kuchain/x/staking/external"
 	"github.com/KuChainNetwork/kuchain/x/staking/types"
@@ -86,7 +87,7 @@ func (k *Keeper) EmptyHooks() *Keeper {
 
 // Load the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
-	store := ctx.KVStore(k.storeKey)
+	store := store.NewStore(ctx, k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
 	if bz == nil {
 		return sdk.ZeroInt()
@@ -99,7 +100,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 
 // Set the last total validator power.
 func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
-	store := ctx.KVStore(k.storeKey)
+	store := store.NewStore(ctx, k.storeKey)
 	bz := k.cdc.MustMarshalBinaryBare(power)
 	store.Set(types.LastTotalPowerKey, bz)
 }

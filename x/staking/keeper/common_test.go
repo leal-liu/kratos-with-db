@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/KuChainNetwork/kuchain/chain/store"
 	"github.com/KuChainNetwork/kuchain/chain/types"
 	"github.com/KuChainNetwork/kuchain/test/simapp"
 
@@ -185,7 +186,7 @@ func createTestPubKeys(numPubKeys int) []crypto.PubKey {
 
 // does a certain by-power index record exist
 // func ValidatorByPowerIndexExists(ctx sdk.Context, keeper Keeper, power []byte) bool {
-// 	store := ctx.KVStore(keeper.storeKey)
+// 	store := store.NewStore(ctx, keeper.storeKey)
 // 	return store.Has(power)
 // }
 
@@ -215,7 +216,7 @@ func TestingUpdateValidator(app *simapp.SimApp, ctx sdk.Context, validator staki
 // nolint:deadcode, unused
 func validatorByPowerIndexExists(app *simapp.SimApp, ctx sdk.Context, power []byte) bool {
 	storkey := sdk.NewKVStoreKey(stakingTypes.StoreKey)
-	store := ctx.KVStore(storkey)
+	store := store.NewStore(ctx, storkey)
 	return store.Has(power)
 }
 

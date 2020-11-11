@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	chaintype "github.com/KuChainNetwork/kuchain/chain/types"
-
+        "github.com/KuChainNetwork/kuchain/chain/store"
 	"github.com/KuChainNetwork/kuchain/x/evidence/exported"
 	"github.com/KuChainNetwork/kuchain/x/evidence/external"
 	"github.com/KuChainNetwork/kuchain/x/evidence/types"
@@ -107,14 +107,14 @@ func (k Keeper) SubmitEvidence(ctx sdk.Context, evidence exported.Evidence) erro
 
 // SetEvidence sets Evidence by hash in the module's KVStore.
 func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
+	store := prefix.NewStore(store.NewStore(ctx, k.storeKey), types.KeyPrefixEvidence)
 	store.Set(evidence.Hash(), k.MustMarshalEvidence(evidence))
 }
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
 func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
+	store := prefix.NewStore(store.NewStore(ctx, k.storeKey), types.KeyPrefixEvidence)
 
 	bz := store.Get(hash)
 	if len(bz) == 0 {
@@ -128,7 +128,7 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Ev
 // each Evidence object, cb will be called. If the cb returns true, the iterator
 // will close and stop.
 func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
+	store := prefix.NewStore(store.NewStore(ctx, k.storeKey), types.KeyPrefixEvidence)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()

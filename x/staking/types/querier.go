@@ -111,6 +111,7 @@ func NewQueryHistoricalInfoParams(height int64) QueryHistoricalInfoParams {
 	return QueryHistoricalInfoParams{height}
 }
 
+
 type QueryValidatorFromConsAddr struct {
 	ConsAcc sdk.ConsAddress
 }

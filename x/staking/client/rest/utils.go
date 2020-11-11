@@ -152,6 +152,7 @@ func queryValidator(cliCtx context.CLIContext, endpoint string) http.HandlerFunc
 	}
 }
 
+
 func queryValidatorByConsAddr(cliCtx context.CLIContext, endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

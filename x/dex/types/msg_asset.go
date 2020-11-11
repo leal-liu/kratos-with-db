@@ -100,6 +100,7 @@ func NewMsgDexSigOut(auth types.AccAddress, isTimeout bool, user, dex AccountID,
 		*msg.MustNewKuMsg(
 			RouterKeyName,
 			msg.WithAuth(auth),
+			msg.WithTransfer(user, dex, Coins{}),
 			msg.WithData(Cdc(), &MsgDexSigOutData{
 				User:      user,
 				Dex:       dex,
@@ -186,10 +187,6 @@ func NewMsgDexDeal(auth types.AccAddress, dex AccountID, from, to AccountID, fro
 	}
 }
 
-func (msg MsgDexDeal) GetSigners() []sdk.AccAddress {
-	return msg.Auth
-}
-
 func (msg MsgDexDeal) GetDealByDex() (AccountID, Coins, AccountID, Coins) {
 	trs := msg.Transfers
 	return trs[0].From, trs[0].Amount, trs[2].From, trs[2].Amount
@@ -272,4 +269,9 @@ func (msg MsgDexDeal) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// GetSigners
+func (msg MsgDexDeal) GetSigners() []sdk.AccAddress {
+	return msg.Auth
 }

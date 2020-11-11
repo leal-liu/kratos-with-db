@@ -6,10 +6,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	chainCfg "github.com/KuChainNetwork/kuchain/chain/config"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
@@ -17,29 +13,28 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-func PersistentPreRunEFn(context *server.Context) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		if cmd.Name() == version.Cmd.Name() {
-			return nil
-		}
+const (
+	// for kratos, it need caller skip 2 by logger.Info and filter.
+	callerSkipLevelNum = 2
+)
 
-		context.Logger = NewLoggerByZap(viper.GetBool(cli.TraceFlag)).With("module", "main")
-		context.Config = chainCfg.DefaultConfig()
-		return nil
-	}
-}
+func NewLoggerByZap(isTrace bool, logLevelStr string) tmlog.Logger {
 
-func NewLoggerByZap(isTrace bool) tmlog.Logger {
-	zapLogger := mkZapLogger(viper.GetBool(cli.TraceFlag))
+	zapLogger := NewZapLogger(viper.GetBool(cli.TraceFlag))
 
-	// process log level for cosmos-sdk
-	logLvCfg := viper.GetString("log_level")
-	logger, err := tmflags.ParseLogLevel(logLvCfg, NewLogger(zapLogger), cfg.DefaultLogLevel())
+	// warp zap log to logger, it will add caller skip 1
+	logger := NewLogger(zapLogger)
+
+	// add caller skip by 2, as warp and level log
+	logger = logger.WithCallerSkip(callerSkipLevelNum)
+
+	// process log level for cosmos-sdk, , it will add caller skip 1
+	loggerByLevel, err := tmflags.ParseLogLevel(logLevelStr, logger, cfg.DefaultLogLevel())
 	if err != nil {
 		panic(err)
 	}
 
-	return logger
+	return loggerByLevel
 }
 
 func mkZapLogger(isDebug bool) *zap.Logger {
