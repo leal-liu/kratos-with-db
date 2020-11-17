@@ -17,6 +17,9 @@ func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router) {
 		"/dex/{creator}",
 		getCreatorHandlerFn(cliCtx),
 	).Methods(http.MethodGet)
+	r.HandleFunc("/dex/sigIn/{creator}/{account}",
+		getSigInStatusHandlerFn(cliCtx),
+	).Methods(http.MethodGet)
 	r.HandleFunc(
 		"/dex/symbol/{creator}/{baseCreator}/{baseCode}/{quoteCreator}/{quoteCode}",
 		getSymbolHandlerFn(cliCtx),
@@ -40,6 +43,32 @@ func getCreatorHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 		rest.PostProcessResponse(w, cliCtx, dex)
+	}
+}
+
+// getSigInStatusHandlerFn
+func getSigInStatusHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		creatorStr := vars["creator"]
+		accountStr := vars["account"]
+		creator, err := chainTypes.NewAccountIDFromStr(creatorStr)
+		if nil != err {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		account, err := chainTypes.NewAccountIDFromStr(accountStr)
+		if nil != err {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		getter := types.NewDexRetriever(cliCtx)
+		coins, _, err := getter.GetSigInWithHeight(account, creator)
+		if nil != err {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+		rest.PostProcessResponse(w, cliCtx, coins)
 	}
 }
 
