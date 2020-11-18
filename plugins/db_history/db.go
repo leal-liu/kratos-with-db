@@ -2,6 +2,7 @@ package dbHistory
 
 import (
 	"sync"
+	"time"
 
 	"github.com/KuChainNetwork/kuchain/plugins/db_history/chaindb"
 	"github.com/KuChainNetwork/kuchain/plugins/db_history/config"
@@ -46,10 +47,15 @@ func (dbs *dbService) GetBD() *pg.DB {
 func NewDB(cfg config.Cfg, logger log.Logger) *dbService {
 	res := &dbService{
 		database: pg.Connect(&pg.Options{
-			Addr:     cfg.DB.Address,
-			User:     cfg.DB.User,
-			Password: cfg.DB.Password,
-			Database: cfg.DB.Database,
+			Addr:               cfg.DB.Address,
+			User:               cfg.DB.User,
+			Password:           cfg.DB.Password,
+			Database:           cfg.DB.Database,
+			PoolSize:           1024,
+			MinIdleConns:       32,
+			PoolTimeout:        2 * time.Second,
+			IdleTimeout:        30 * time.Second,
+			IdleCheckFrequency: 30 * time.Second,
 		}),
 
 		errDatabase: pg.Connect(&pg.Options{
