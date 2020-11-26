@@ -53,10 +53,12 @@ func handleMsgCreateDex(ctx chainTypes.Context, k Keeper, msg *types.MsgCreateDe
 	if err := msg.UnmarshalData(ModuleCdc, &msgData); err != nil {
 		return nil, errors.Wrapf(err, "msg create coin data unmarshal error")
 	}
+
 	logger.Debug("handle dex create",
 		"creator", msgData.Creator,
 		"stakings", msgData.Stakings,
 		"desc", string(msgData.Desc))
+
 	ctx.RequireAccount(msgData.Creator)
 
 	if err := k.CreateDex(ctx.Context(),
@@ -78,39 +80,26 @@ func handleMsgCreateDex(ctx chainTypes.Context, k Keeper, msg *types.MsgCreateDe
 // handleMsgUpdateDexDescription Handle Msg update dex description
 func handleMsgUpdateDexDescription(ctx chainTypes.Context,
 	keeper Keeper,
-	msg *types.MsgUpdateDexDescription) (res *sdk.Result, err error) {
+	msg *types.MsgUpdateDexDescription) (*sdk.Result, error) {
 	logger := ctx.Logger()
+
 	msgData := types.MsgUpdateDexDescriptionData{}
-	if err = msg.UnmarshalData(ModuleCdc, &msgData); nil != err {
-		err = errors.Wrapf(err, "msg dex update description data unmarshal error")
-		return
+	if err := msg.UnmarshalData(ModuleCdc, &msgData); nil != err {
+		return nil, errors.Wrapf(err, "msg dex update description data unmarshal error")
 	}
-	// check description max length
-	if types.MaxDexDescriptorLen < len(msgData.Desc) {
-		err = errors.Wrapf(types.ErrDexDescTooLong,
-			"msg update dex %s description",
-			msgData.Creator)
-		return
-	}
+
 	logger.Debug("handle dex update description",
 		"creator", msgData.Creator,
 		"desc", string(msgData.Desc))
+
 	ctx.RequireAccount(msgData.Creator)
-	var ok bool
-	if err, ok = keeper.UpdateDexDescription(ctx.Context(),
-		msgData.Creator,
-		string(msgData.Desc)); nil != err {
-		err = errors.Wrapf(err,
-			"msg update dex %s description",
-			msgData.Creator)
-		return
+
+	if err := keeper.UpdateDexDescription(ctx.Context(),
+		msgData.Creator, string(msgData.Desc)); nil != err {
+		return nil, errors.Wrapf(err,
+			"msg update dex %s description", msgData.Creator)
 	}
-	if !ok {
-		err = errors.Wrapf(types.ErrDexDescriptionSame,
-			"msg update dex %s description",
-			msgData.Creator)
-		return
-	}
+
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeUpdateDexDescription,
@@ -119,26 +108,27 @@ func handleMsgUpdateDexDescription(ctx chainTypes.Context,
 			sdk.NewAttribute(types.AttributeKeyDescription, string(msgData.Desc)),
 		),
 	)
-	res = &sdk.Result{Events: ctx.EventManager().Events()}
-	return
+
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // handleMsgDestroyDex handle Msg destroy dex
 func handleMsgDestroyDex(ctx chainTypes.Context,
 	keeper Keeper,
-	msg *types.MsgDestroyDex) (res *sdk.Result, err error) {
+	msg *types.MsgDestroyDex) (*sdk.Result, error) {
 	logger := ctx.Logger()
+
 	msgData := types.MsgDestroyDexData{}
-	if err = msg.UnmarshalData(ModuleCdc, &msgData); nil != err {
-		err = errors.Wrapf(err, "msg dex destroy unmarshal error")
-		return
+	if err := msg.UnmarshalData(ModuleCdc, &msgData); nil != err {
+		return nil, errors.Wrapf(err, "msg dex destroy unmarshal error")
 	}
-	logger.Debug("handle dex destroy",
-		"creator", msgData.Creator)
-	if err = keeper.DestroyDex(ctx.Context(), msgData.Creator); nil != err {
-		err = errors.Wrapf(err, "msg destroy dex %s", msgData.Creator)
-		return
+
+	logger.Debug("handle dex destroy", "creator", msgData.Creator)
+
+	if err := keeper.DestroyDex(ctx.Context(), msgData.Creator); nil != err {
+		return nil, errors.Wrapf(err, "msg destroy dex %s", msgData.Creator)
 	}
+
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeDestroyDex,
@@ -146,43 +136,43 @@ func handleMsgDestroyDex(ctx chainTypes.Context,
 			sdk.NewAttribute(types.AttributeKeyCreator, msgData.Creator.String()),
 		),
 	)
-	res = &sdk.Result{Events: ctx.EventManager().Events()}
-	return
+
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // handleMsgCreateSymbol handle Msg create symbol
 func handleMsgCreateSymbol(ctx chainTypes.Context,
 	keeper Keeper,
-	msg *types.MsgCreateSymbol) (res *sdk.Result, err error) {
-	var data types.MsgCreateSymbolData
-	if data, err = msg.GetData(); nil != err {
-		return
+	msg *types.MsgCreateSymbol) (*sdk.Result, error) {
+	data, err := msg.GetData()
+	if err != nil {
+		return nil, err
 	}
+
 	if !data.Base.Validate() || !data.Quote.Validate() {
-		err = errors.Wrapf(types.ErrSymbolIncorrect,
-			"msg create symbol %s data is incorrect",
-			data.Creator.String())
-		return
+		return nil, errors.Wrapf(types.ErrSymbolIncorrect,
+			"msg create symbol %s data is incorrect", data.Creator)
 	}
+
 	logger := ctx.Logger()
-	logger.Debug("handle create symbol",
-		"creator", data.Creator)
-	if err = keeper.CreateSymbol(ctx.Context(), data.Creator, &types.Symbol{
+	logger.Debug("handle create symbol", "creator", data.Creator)
+
+	if err := keeper.CreateSymbol(ctx.Context(), data.Creator, &types.Symbol{
 		Base:   data.Base,
 		Quote:  data.Quote,
 		Height: ctx.BlockHeight(),
 		CreateTime: func() time.Time {
 			if data.CreateTime.IsZero() {
-				return time.Now()
+				return ctx.BlockTime()
 			}
 			return data.CreateTime
 		}(),
-	}); nil != err {
-		err = errors.Wrapf(err,
+	}); err != nil {
+		return nil, errors.Wrapf(err,
 			"msg create symbol error, creator %s",
 			data.Creator.String())
-		return
 	}
+
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeCreateSymbol,
@@ -193,115 +183,118 @@ func handleMsgCreateSymbol(ctx chainTypes.Context,
 			sdk.NewAttribute(types.AttributeKeySymbolBaseCode, data.Base.Code),
 			sdk.NewAttribute(types.AttributeKeySymbolBaseName, data.Base.Name),
 			sdk.NewAttribute(types.AttributeKeySymbolBaseFullName, data.Base.FullName),
-			sdk.NewAttribute(types.AttributeKeySymbolBaseIconUrl, data.Base.IconUrl),
-			sdk.NewAttribute(types.AttributeKeySymbolBaseTxUrl, data.Base.TxUrl),
+			sdk.NewAttribute(types.AttributeKeySymbolBaseIconURL, data.Base.IconURL),
+			sdk.NewAttribute(types.AttributeKeySymbolBaseTxURL, data.Base.TxURL),
 			sdk.NewAttribute(types.AttributeKeySymbolQuoteCreator, data.Quote.Creator),
 			sdk.NewAttribute(types.AttributeKeySymbolQuoteCode, data.Quote.Code),
 			sdk.NewAttribute(types.AttributeKeySymbolQuoteName, data.Quote.Name),
 			sdk.NewAttribute(types.AttributeKeySymbolQuoteFullName, data.Quote.FullName),
-			sdk.NewAttribute(types.AttributeKeySymbolQuoteIconUrl, data.Quote.IconUrl),
-			sdk.NewAttribute(types.AttributeKeySymbolQuoteTxUrl, data.Quote.TxUrl),
+			sdk.NewAttribute(types.AttributeKeySymbolQuoteIconURL, data.Quote.IconURL),
+			sdk.NewAttribute(types.AttributeKeySymbolQuoteTxURL, data.Quote.TxURL),
 		),
 	)
-	res = &sdk.Result{Events: ctx.EventManager().Events()}
-	return
+
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // handleMsgUpdateSymbol handle Msg update symbol
 func handleMsgUpdateSymbol(ctx chainTypes.Context,
 	keeper Keeper,
-	msg *types.MsgUpdateSymbol) (res *sdk.Result, err error) {
-	var data types.MsgUpdateSymbolData
-	if data, err = msg.GetData(); nil != err {
-		return
+	msg *types.MsgUpdateSymbol) (*sdk.Result, error) {
+	data, err := msg.GetData()
+	if err != nil {
+		return nil, err
 	}
-	if 0 >= len(data.Base.Creator) ||
-		0 >= len(data.Base.Code) ||
-		0 >= len(data.Quote.Creator) ||
-		0 >= len(data.Quote.Code) {
-		err = errors.Wrapf(types.ErrSymbolIncorrect,
+
+	if len(data.Base.Creator) == 0 ||
+		len(data.Base.Code) == 0 ||
+		len(data.Quote.Creator) == 0 ||
+		len(data.Quote.Code) == 0 {
+		return nil, errors.Wrapf(types.ErrSymbolIncorrect,
 			"msg create symbol %s data is incorrect",
 			data.Creator.String())
-		return
 	}
-	attributes := make([]sdk.Attribute, 0)
+
+	attributes := make([]sdk.Attribute, 0, 16)
 	for _, e := range []struct {
 		Key   string
 		Value string
 	}{
 		{types.AttributeKeySymbolBaseName, data.Base.Name},
 		{types.AttributeKeySymbolBaseFullName, data.Base.FullName},
-		{types.AttributeKeySymbolBaseIconUrl, data.Base.IconUrl},
-		{types.AttributeKeySymbolBaseTxUrl, data.Base.TxUrl},
+		{types.AttributeKeySymbolBaseIconURL, data.Base.IconURL},
+		{types.AttributeKeySymbolBaseTxURL, data.Base.TxURL},
 		{types.AttributeKeySymbolQuoteName, data.Quote.Name},
 		{types.AttributeKeySymbolQuoteFullName, data.Quote.FullName},
-		{types.AttributeKeySymbolQuoteIconUrl, data.Quote.IconUrl},
-		{types.AttributeKeySymbolQuoteTxUrl, data.Quote.TxUrl},
+		{types.AttributeKeySymbolQuoteIconURL, data.Quote.IconURL},
+		{types.AttributeKeySymbolQuoteTxURL, data.Quote.TxURL},
 	} {
-		if 0 < len(e.Value) {
+		if len(e.Value) > 0 {
 			attributes = append(attributes, sdk.NewAttribute(e.Key, e.Value))
 		}
 	}
+
 	if 0 >= len(attributes) {
-		err = errors.Wrapf(types.ErrSymbolIncorrect,
+		return nil, errors.Wrapf(types.ErrSymbolIncorrect,
 			"msg create symbol %s data is incorrect",
 			data.Creator.String())
-		return
 	}
-	logger := ctx.Logger()
-	logger.Debug("handle update symbol",
-		"creator", data.Creator)
-	if err = keeper.UpdateSymbol(ctx.Context(), data.Creator, &types.Symbol{
+
+	ctx.Logger().Debug("handle update symbol", "creator", data.Creator)
+
+	if err := keeper.UpdateSymbol(ctx.Context(), data.Creator, &types.Symbol{
 		Base:  data.Base,
 		Quote: data.Quote,
-	}); nil != err {
-		err = errors.Wrapf(err,
+	}); err != nil {
+		return nil, errors.Wrapf(err,
 			"msg create symbol error, creator %s",
 			data.Creator.String())
-		return
 	}
+
 	attributes = append(attributes, sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory))
+
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeUpdateSymbol,
 			attributes...,
 		),
 	)
-	res = &sdk.Result{Events: ctx.EventManager().Events()}
-	return
+
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // handleMsgPauseSymbol handle Msg pause symbol
 func handleMsgPauseSymbol(ctx chainTypes.Context,
 	keeper Keeper,
 	msg *types.MsgPauseSymbol) (res *sdk.Result, err error) {
-	var data types.MsgPauseSymbolData
-	if data, err = msg.GetData(); nil != err {
-		return
+	data, err := msg.GetData()
+	if err != nil {
+		return nil, err
 	}
-	if 0 >= len(data.BaseCreator) ||
-		0 >= len(data.BaseCode) ||
-		0 >= len(data.QuoteCreator) ||
-		0 >= len(data.QuoteCode) {
-		err = errors.Wrapf(types.ErrSymbolIncorrect,
+
+	if len(data.BaseCreator) == 0 ||
+		len(data.BaseCode) == 0 ||
+		len(data.QuoteCreator) == 0 ||
+		len(data.QuoteCode) == 0 {
+		return nil, errors.Wrapf(types.ErrSymbolIncorrect,
 			"msg pause symbol base code or quote code is empty, creator %s",
 			data.Creator.String())
-		return
 	}
-	logger := ctx.Logger()
-	logger.Debug("handle pause symbol",
+
+	ctx.Logger().Debug("handle pause symbol",
 		"creator", data.Creator)
-	if err = keeper.PauseSymbol(ctx.Context(),
+
+	if err := keeper.PauseSymbol(ctx.Context(),
 		data.Creator,
 		data.BaseCreator,
 		data.BaseCode,
 		data.QuoteCreator,
-		data.QuoteCode); nil != err {
-		err = errors.Wrapf(err,
+		data.QuoteCode); err != nil {
+		return nil, errors.Wrapf(err,
 			"msg shutdown symbol error, creator %s",
-			data.Creator.String())
-		return
+			data.Creator)
 	}
+
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypePauseSymbol,
@@ -312,40 +305,40 @@ func handleMsgPauseSymbol(ctx chainTypes.Context,
 			sdk.NewAttribute(types.AttributeKeySymbolBaseName, data.QuoteCode),
 		),
 	)
-	res = &sdk.Result{Events: ctx.EventManager().Events()}
-	return
+
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // handleMsgRestoreSymbol handle Msg restore symbol
 func handleMsgRestoreSymbol(ctx chainTypes.Context,
 	keeper Keeper,
-	msg *types.MsgRestoreSymbol) (res *sdk.Result, err error) {
-	var data types.MsgRestoreSymbolData
-	if data, err = msg.GetData(); nil != err {
-		return
+	msg *types.MsgRestoreSymbol) (*sdk.Result, error) {
+	data, err := msg.GetData()
+	if err != nil {
+		return nil, err
 	}
-	if 0 >= len(data.BaseCreator) ||
-		0 >= len(data.BaseCode) ||
-		0 >= len(data.QuoteCreator) ||
-		0 >= len(data.QuoteCode) {
-		err = errors.Wrapf(types.ErrSymbolIncorrect,
+
+	if len(data.BaseCreator) == 0 ||
+		len(data.BaseCode) == 0 ||
+		len(data.QuoteCreator) == 0 ||
+		len(data.QuoteCode) == 0 {
+		return nil, errors.Wrapf(types.ErrSymbolIncorrect,
 			"msg restore symbol base code or quote code is empty, creator %s",
-			data.Creator.String())
-		return
+			data.Creator)
 	}
-	logger := ctx.Logger()
-	logger.Debug("handle restore symbol",
+
+	ctx.Logger().Debug("handle restore symbol",
 		"creator", data.Creator)
-	if err = keeper.RestoreSymbol(ctx.Context(),
+
+	if err := keeper.RestoreSymbol(ctx.Context(),
 		data.Creator,
 		data.BaseCreator,
 		data.BaseCode,
 		data.QuoteCreator,
-		data.QuoteCode); nil != err {
-		err = errors.Wrapf(err,
+		data.QuoteCode); err != nil {
+		return nil, errors.Wrapf(err,
 			"msg restore symbol error, creator %s",
-			data.Creator.String())
-		return
+			data.Creator)
 	}
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
@@ -357,41 +350,42 @@ func handleMsgRestoreSymbol(ctx chainTypes.Context,
 			sdk.NewAttribute(types.AttributeKeySymbolBaseName, data.QuoteCode),
 		),
 	)
-	res = &sdk.Result{Events: ctx.EventManager().Events()}
-	return
+
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 // handleMsgShutdownSymbol handle Msg shutdown symbol
 func handleMsgShutdownSymbol(ctx chainTypes.Context,
 	keeper Keeper,
-	msg *types.MsgShutdownSymbol) (res *sdk.Result, err error) {
-	var data types.MsgShutdownSymbolData
-	if data, err = msg.GetData(); nil != err {
-		return
+	msg *types.MsgShutdownSymbol) (*sdk.Result, error) {
+	data, err := msg.GetData()
+	if err != nil {
+		return nil, err
 	}
-	if 0 >= len(data.BaseCreator) ||
-		0 >= len(data.BaseCode) ||
-		0 >= len(data.QuoteCreator) ||
-		0 >= len(data.QuoteCode) {
-		err = errors.Wrapf(types.ErrSymbolIncorrect,
+
+	if len(data.BaseCreator) == 0 ||
+		len(data.BaseCode) == 0 ||
+		len(data.QuoteCreator) == 0 ||
+		len(data.QuoteCode) == 0 {
+		return nil, errors.Wrapf(types.ErrSymbolIncorrect,
 			"msg shutdown symbol base code or quote code is empty, creator %s",
-			data.Creator.String())
-		return
+			data.Creator)
 	}
-	logger := ctx.Logger()
-	logger.Debug("handle shutdown symbol",
+
+	ctx.Logger().Debug("handle shutdown symbol",
 		"creator", data.Creator)
+
 	if err = keeper.ShutdownSymbol(ctx.Context(),
 		data.Creator,
 		data.BaseCreator,
 		data.BaseCode,
 		data.QuoteCreator,
-		data.QuoteCode); nil != err {
-		err = errors.Wrapf(err,
+		data.QuoteCode); err != nil {
+		return nil, errors.Wrapf(err,
 			"msg shutdown symbol error, creator %s",
-			data.Creator.String())
-		return
+			data.Creator)
 	}
+
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeShutdownSymbol,
@@ -402,8 +396,8 @@ func handleMsgShutdownSymbol(ctx chainTypes.Context,
 			sdk.NewAttribute(types.AttributeKeySymbolBaseName, data.QuoteCode),
 		),
 	)
-	res = &sdk.Result{Events: ctx.EventManager().Events()}
-	return
+
+	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
 }
 
 func handleMsgDexSigIn(ctx chainTypes.Context, k Keeper, msg *types.MsgDexSigIn) (*sdk.Result, error) {
@@ -484,8 +478,13 @@ func handleMsgDexDeal(ctx chainTypes.Context, k Keeper, msg *types.MsgDexDeal) (
 
 	logger.Debug("handle dex deal", "dex", msgData.Dex)
 
+	// Auto SigIn for each account
+
 	// Update sigIn status
-	if err := k.Deal(ctx.Context(), msgData); err != nil {
+	acc1, ass1, acc2, ass2 := msg.GetDealByDex()
+	fee1, fee2 := msg.GetDealFeeByDex()
+
+	if err := k.Deal(ctx.Context(), msgData.Dex, acc1, acc2, ass1, ass2, fee1, fee2); err != nil {
 		return nil, err
 	}
 
@@ -494,15 +493,14 @@ func handleMsgDexDeal(ctx chainTypes.Context, k Keeper, msg *types.MsgDexDeal) (
 			types.EventTypeDexDeal,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyDex, msgData.Dex.String()),
-			sdk.NewAttribute(types.AttributeKeyDealRole1, msgData.TransferData.From.String()),
-			sdk.NewAttribute(types.AttributeKeyDealToken1, msgData.TransferData.FromAsset.String()),
-			sdk.NewAttribute(types.AttributeKeyDealFee1, msgData.TransferData.FromFee.String()),
-			sdk.NewAttribute(types.AttributeKeyDealRole2, msgData.TransferData.To.String()),
-			sdk.NewAttribute(types.AttributeKeyDealToken2, msgData.TransferData.ToAsset.String()),
-			sdk.NewAttribute(types.AttributeKeyDealFee2, msgData.TransferData.ToFee.String()),
+			sdk.NewAttribute(types.AttributeKeyDealRole1, acc1.String()),
+			sdk.NewAttribute(types.AttributeKeyDealToken1, ass1.String()),
+			sdk.NewAttribute(types.AttributeKeyDealFee1, fee1.String()),
+			sdk.NewAttribute(types.AttributeKeyDealRole2, acc2.String()),
+			sdk.NewAttribute(types.AttributeKeyDealToken2, ass2.String()),
+			sdk.NewAttribute(types.AttributeKeyDealFee2, fee2.String()),
 		),
 	)
 
 	return &sdk.Result{Events: ctx.EventManager().Events()}, nil
-
 }

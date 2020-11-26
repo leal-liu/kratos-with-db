@@ -11,85 +11,81 @@ import (
 
 // CreateSymbol create symbol
 func (a DexKeeper) CreateSymbol(ctx sdk.Context,
-	creator types.Name, symbol *types.Symbol) (err error) {
+	creator types.Name, symbol *types.Symbol) error {
 	dex, ok := a.getDex(ctx, creator)
 	if !ok {
-		err = errors.Wrapf(types.ErrDexNotExists,
+		return errors.Wrapf(types.ErrDexNotExists,
 			"create symbol dex %s not exists",
 			creator.String())
-		return
 	}
+
 	// check base and quote are exists
 	values := strings.Split(symbol.Base.Code, "/")
-	if 2 != len(values) {
-		err = errors.Wrapf(types.ErrSymbolFormat,
+	if len(values) != 2 {
+		return errors.Wrapf(types.ErrSymbolFormat,
 			"create symbol dex %s coin symbol %s format error",
-			creator.String(),
-			symbol.Base.Code)
-		return
+			creator.String(), symbol.Base.Code)
 	}
+
 	baseCode := values[1]
 	values = strings.Split(symbol.Quote.Code, "/")
-	if 2 != len(values) {
-		err = errors.Wrapf(types.ErrSymbolFormat,
+	if len(values) != 2 {
+		return errors.Wrapf(types.ErrSymbolFormat,
 			"create symbol dex %s coin symbol %s format error",
-			creator.String(),
-			symbol.Quote.Code)
-		return
+			creator.String(), symbol.Quote.Code)
 	}
+
 	quoteCode := values[1]
 	var baseCodeFound, quoteCodeFound bool
-	a.assetKeeper.IterateAllCoins(ctx, func(_ chainType.AccountID, balance Coins) (stop bool) {
+	a.assetKeeper.IterateAllCoins(ctx, func(_ chainType.AccountID, balance Coins) bool {
 		for _, coin := range balance {
 			s := strings.Split(coin.Denom, "/")[1]
 			if s == baseCode {
 				baseCodeFound = true
 			}
+
 			if s == quoteCode {
 				quoteCodeFound = true
 			}
+
 			if baseCodeFound && quoteCodeFound {
-				stop = true
-				return
+				return true
 			}
 		}
-		return
+		return false
 	})
+
 	if !baseCodeFound || !quoteCodeFound {
-		err = errors.Wrapf(types.ErrSymbolNotSupply,
+		return errors.Wrapf(types.ErrSymbolNotSupply,
 			"create symbol dex %s coin symbol %s/%s not supply",
-			creator.String(),
-			creator.String(),
-			symbol.Base.Code)
-		return
+			creator.String(), creator.String(), symbol.Base.Code)
 	}
+
 	if dex, ok = dex.WithSymbol(symbol); !ok {
-		err = types.ErrSymbolExists
-		return
+		return types.ErrSymbolExists
 	}
+
 	a.setDex(ctx, dex)
-	return
+	return nil
 }
 
 // UpdateSymbol update symbol
-func (a DexKeeper) UpdateSymbol(ctx sdk.Context,
-	creator types.Name, update *types.Symbol) (err error) {
+func (a DexKeeper) UpdateSymbol(ctx sdk.Context, creator types.Name, update *types.Symbol) error {
 	dex, ok := a.getDex(ctx, creator)
 	if !ok {
-		err = errors.Wrapf(types.ErrDexNotExists,
+		return errors.Wrapf(types.ErrDexNotExists,
 			"update symbol dex %s not exists",
 			creator.String())
-		return
 	}
-	var symbol types.Symbol
-	if symbol, ok = dex.Symbol(update.Base.Creator,
-		update.Base.Code,
-		update.Quote.Creator,
-		update.Quote.Code); !ok {
-		err = errors.Wrapf(types.ErrSymbolNotExists,
+
+	symbol, ok := dex.Symbol(update.Base.Creator, update.Base.Code,
+		update.Quote.Creator, update.Quote.Code)
+
+	if !ok {
+		return errors.Wrapf(types.ErrSymbolNotExists,
 			"update symbol not exists, dex %s", creator.String())
-		return
 	}
+
 	updated := false
 	for _, pair := range []struct {
 		Dst *string
@@ -97,124 +93,120 @@ func (a DexKeeper) UpdateSymbol(ctx sdk.Context,
 	}{
 		{&symbol.Base.Name, update.Base.Name},
 		{&symbol.Base.FullName, update.Base.FullName},
-		{&symbol.Base.IconUrl, update.Base.IconUrl},
-		{&symbol.Base.TxUrl, update.Base.TxUrl},
+		{&symbol.Base.IconURL, update.Base.IconURL},
+		{&symbol.Base.TxURL, update.Base.TxURL},
 		{&symbol.Quote.Name, update.Quote.Name},
 		{&symbol.Quote.FullName, update.Quote.FullName},
-		{&symbol.Quote.IconUrl, update.Quote.IconUrl},
-		{&symbol.Quote.TxUrl, update.Quote.TxUrl},
+		{&symbol.Quote.IconURL, update.Quote.IconURL},
+		{&symbol.Quote.TxURL, update.Quote.TxURL},
 	} {
 		if 0 < len(pair.Src) && *pair.Dst != pair.Src {
 			*pair.Dst = pair.Src
 			updated = true
 		}
 	}
+
 	if !updated {
-		return
+		return nil
 	}
+
 	if !dex.UpdateSymbol(update.Base.Creator,
 		update.Base.Code,
 		update.Quote.Creator,
 		update.Quote.Code,
 		&symbol) {
-		err = errors.Wrapf(types.ErrSymbolNotExists,
+		return errors.Wrapf(types.ErrSymbolNotExists,
 			"update symbol (%s/%s) not exists",
 			update.Base.Code, update.Quote.Code)
-		return
 	}
+
 	a.setDex(ctx, dex)
-	return
+	return nil
 }
 
 // PauseSymbol pause symbol
 func (a DexKeeper) PauseSymbol(ctx sdk.Context,
-	creator types.Name, baseCreator, baseCode, quoteCreator, quoteCode string) (err error) {
+	creator types.Name, baseCreator, baseCode, quoteCreator, quoteCode string) error {
 	dex, ok := a.getDex(ctx, creator)
 	if !ok {
-		err = errors.Wrapf(types.ErrDexNotExists,
+		return errors.Wrapf(types.ErrDexNotExists,
 			"pause symbol, dex %s not exists",
 			creator.String())
-		return
 	}
 	var symbol types.Symbol
 	if symbol, ok = dex.Symbol(baseCreator,
 		baseCode,
 		quoteCreator,
 		quoteCode); !ok {
-		err = errors.Wrapf(types.ErrSymbolNotExists,
+		return errors.Wrapf(types.ErrSymbolNotExists,
 			"pause symbol, symbol (%s/%s) not exists",
-			baseCode,
-			quoteCode)
-		return
+			baseCode, quoteCode)
 	}
 	if !dex.UpdateSymbol(baseCreator,
 		baseCode,
 		quoteCreator,
 		quoteCode,
 		(&symbol).WithPaused(true)) {
-		err = errors.Wrapf(types.ErrSymbolNotExists,
+		return errors.Wrapf(types.ErrSymbolNotExists,
 			"pause symbol, symbol (%s/%s) not exists",
-			baseCode,
-			quoteCode)
-		return
+			baseCode, quoteCode)
 	}
+
 	a.setDex(ctx, dex)
-	return
+	return nil
 }
 
 // RestoreSymbol restore symbol
 func (a DexKeeper) RestoreSymbol(ctx sdk.Context,
-	creator types.Name, baseCreator, baseCode, quoteCreator, quoteCode string) (err error) {
+	creator types.Name, baseCreator, baseCode, quoteCreator, quoteCode string) error {
 	dex, ok := a.getDex(ctx, creator)
 	if !ok {
-		err = errors.Wrapf(types.ErrDexNotExists,
+		return errors.Wrapf(types.ErrDexNotExists,
 			"restore symbol, dex %s not exists",
 			creator.String())
-		return
 	}
+
 	var symbol types.Symbol
 	if symbol, ok = dex.Symbol(baseCreator,
 		baseCode,
 		quoteCreator,
 		quoteCode); !ok {
-		err = errors.Wrapf(types.ErrSymbolNotExists,
+		return errors.Wrapf(types.ErrSymbolNotExists,
 			"restore symbol, symbol (%s/%s) not exists",
-			baseCode,
-			quoteCode)
-		return
+			baseCode, quoteCode)
 	}
+
 	if !dex.UpdateSymbol(baseCreator,
 		baseCode,
 		quoteCreator,
 		quoteCode,
 		(&symbol).WithPaused(false)) {
-		err = errors.Wrapf(types.ErrSymbolNotExists,
+		return errors.Wrapf(types.ErrSymbolNotExists,
 			"restore symbol, symbol (%s/%s) not exists",
-			baseCode,
-			quoteCode)
-		return
+			baseCode, quoteCode)
 	}
+
 	a.setDex(ctx, dex)
-	return
+	return nil
 }
 
 // ShutdownSymbol shutdown symbol
 func (a DexKeeper) ShutdownSymbol(ctx sdk.Context,
-	creator types.Name, baseCreator, baseCode, quoteCreator, quoteCode string) (err error) {
+	creator types.Name, baseCreator, baseCode, quoteCreator, quoteCode string) error {
 	dex, ok := a.getDex(ctx, creator)
 	if !ok {
-		err = errors.Wrapf(types.ErrDexNotExists,
+		return errors.Wrapf(types.ErrDexNotExists,
 			"delete symbol, dex %s not exists",
 			creator.String())
-		return
 	}
+
 	if !dex.DeleteSymbol(baseCreator, baseCode, quoteCreator, quoteCode) {
-		err = errors.Wrapf(types.ErrSymbolNotExists,
+		return errors.Wrapf(types.ErrSymbolNotExists,
 			"delete symbol, symbol (%s/%s) not exists",
 			baseCode,
 			quoteCode)
-		return
 	}
+
 	a.setDex(ctx, dex)
-	return
+	return nil
 }

@@ -162,8 +162,6 @@ func TestCreateAsset(t *testing.T) {
 	})
 }
 
-// TODO: add coin stat setOpt test
-
 func TestIssueCoins(t *testing.T) {
 	app, _ := createAppForTest()
 

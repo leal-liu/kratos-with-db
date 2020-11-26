@@ -3,10 +3,9 @@ package keeper
 import (
 	"github.com/KuChainNetwork/kuchain/chain/store"
 	chainType "github.com/KuChainNetwork/kuchain/chain/types"
-	gogotypes "github.com/gogo/protobuf/types"
-
 	"github.com/KuChainNetwork/kuchain/x/distribution/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogotypes "github.com/gogo/protobuf/types"
 )
 
 // get the delegator withdraw address, defaulting to the delegator address

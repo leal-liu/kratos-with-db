@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-        "github.com/KuChainNetwork/kuchain/chain/store"
+	"github.com/KuChainNetwork/kuchain/chain/store"
 	chainTypes "github.com/KuChainNetwork/kuchain/chain/types"
 
 	"github.com/KuChainNetwork/kuchain/x/slashing/types"

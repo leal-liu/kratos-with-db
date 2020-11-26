@@ -2,7 +2,6 @@ package asset
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/KuChainNetwork/kuchain/chain/types"
@@ -25,11 +24,15 @@ func InitGenesis(ctx sdk.Context, ak Keeper, bz json.RawMessage) {
 	logger.Debug("init genesis", "module", ModuleName, "data", data)
 
 	for _, a := range data.GenesisCoins {
-		logger.Info("init genesis asset coin", "accountID", a.GetCreator(), "coins", a.GetSymbol(), "maxsupply:", a.GetMaxSupply())
+		logger.Info("init genesis asset coin",
+			"accountID", a.GetCreator(),
+			"coins", a.GetSymbol(),
+			"maxSupply:", a.GetMaxSupply())
 
 		initSupply := types.NewCoin(a.GetMaxSupply().Denom, sdk.ZeroInt())
 
-		err := ak.Create(ctx, a.GetCreator(), a.GetSymbol(), a.GetMaxSupply(), true, true, true, 0, initSupply, []byte{}) // TODO: genesis coins support opt
+		err := ak.Create(ctx, a.GetCreator(), a.GetSymbol(), a.GetMaxSupply(),
+			true, true, true, 0, initSupply, []byte{}) // TODO: genesis coins support opt
 		if err != nil {
 			panic(err)
 		}
@@ -55,7 +58,6 @@ func InitGenesis(ctx sdk.Context, ak Keeper, bz json.RawMessage) {
 
 	for _, a := range data.GenesisAssets {
 		logger.Info("init genesis account asset", "accountID", a.GetID(), "coins", a.GetCoins())
-		fmt.Println("init genesis account asset", "accountID", a.GetID(), "coins", a.GetCoins())
 		err := ak.GenesisCoins(ctx, a.GetID(), a.GetCoins())
 		if err != nil {
 			panic(err)

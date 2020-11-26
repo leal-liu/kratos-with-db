@@ -9,7 +9,7 @@ type Dex struct {
 	Description string   `json:"description" yaml:"description"` // Dex Description
 	Number      uint64   `json:"number" yaml:"number"`           // Dex number
 	Sequence    uint64   `json:"sequence" yaml:"sequence"`       // Dex sequence
-	Symbols     []Symbol `json:"symbols" yaml"symbols"`          // Dex symbols
+	Symbols     []Symbol `json:"symbols" yaml:"symbols"`         // Dex symbols
 }
 
 // NewDex creator a new dex
@@ -30,7 +30,7 @@ func (d *Dex) WithNumber(n uint64) *Dex {
 // CanDestroy check whether dex can destroy
 func (d *Dex) CanDestroy(sumCallback func() chainTypes.Coins) (ok bool) {
 	sum := sumCallback()
-	return 0 == len(sum) || sum.IsZero()
+	return len(sum) == 0 || sum.IsZero()
 }
 
 // WithSymbol dex add symbol
@@ -93,21 +93,21 @@ func (d *Dex) UpdateSymbol(baseCreator, baseCode, quoteCreator, quoteCode string
 }
 
 // DeleteSymbol delete symbol
-func (d *Dex) DeleteSymbol(baseCreator, baseCode, quoteCreator, quoteCode string) (ok bool) {
+func (d *Dex) DeleteSymbol(baseCreator, baseCode, quoteCreator, quoteCode string) bool {
 	if 0 >= len(baseCreator) || 0 >= len(baseCode) || 0 >= len(quoteCreator) || 0 >= len(quoteCode) {
-		return
+		return false
 	}
+
 	for i := 0; i < len(d.Symbols); i++ {
 		s := &d.Symbols[i]
 		if baseCreator == s.Base.Creator &&
 			baseCode == s.Base.Code &&
 			quoteCreator == s.Quote.Creator &&
 			quoteCode == s.Quote.Code {
-			ok = true
-			ok = true
 			d.Symbols = append(d.Symbols[:i], d.Symbols[i+1:]...)
-			return
+			return true
 		}
 	}
-	return
+
+	return false
 }

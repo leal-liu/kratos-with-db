@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-        "github.com/KuChainNetwork/kuchain/chain/store"
+	"github.com/KuChainNetwork/kuchain/chain/store"
 	chaintypes "github.com/KuChainNetwork/kuchain/chain/types"
 	"github.com/KuChainNetwork/kuchain/x/staking/external"
 	"github.com/KuChainNetwork/kuchain/x/staking/types"
