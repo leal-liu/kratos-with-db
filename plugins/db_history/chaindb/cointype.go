@@ -2,6 +2,7 @@ package chaindb
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/KuChainNetwork/kuchain/plugins/db_history/types"
 	"github.com/KuChainNetwork/kuchain/utils/eventutil"
@@ -48,7 +49,7 @@ type CreateCoinTypeModel struct {
 	Time              string `json:"time"`
 }
 
-func makeCtpSql(model EventCoinType) CreateCoinTypeModel {
+func makeCtpSql(model EventCoinType, isBurn bool) (CreateCoinTypeModel, error) {
 	coin, _ := NewCoin(model.Supply)
 	if len(model.Supply) <= 0 {
 		coin, _ = NewCoin(model.Amount)
@@ -72,10 +73,18 @@ func makeCtpSql(model EventCoinType) CreateCoinTypeModel {
 	}
 
 	if len(model.Symbol) <= 0 {
-		q.Symbol = coin.Symbol
+		symbolList := strings.Split(coin.Symbol, "/")
+		if len(symbolList) != 2 {
+			return CreateCoinTypeModel{}, fmt.Errorf("symbol type error,s:%s", coin.Symbol)
+		}
+		q.Creator = symbolList[0]
+		q.Symbol = symbolList[1]
 	}
-
-	return q
+	if isBurn {
+		q.AmountFloat = q.AmountFloat * -1
+		q.Amount = q.Amount * -1
+	}
+	return q, nil
 }
 
 func etExec(db *pg.DB, model CreateCoinTypeModel, logger log.Logger) error {
@@ -138,7 +147,11 @@ func EventCoinTypeAdd(db *pg.DB, logger log.Logger, evt *types.Event) {
 		return
 	}
 
-	m := makeCtpSql(CoinTypeMsg)
+	m, err := makeCtpSql(CoinTypeMsg, false)
+	if err != nil {
+		EventErr(db, logger, NewErrMsg(err))
+		return
+	}
 	logger.Debug("EventCoinTypeAdd", "\n", *evt, "\n", CoinTypeMsg, "\n", m)
 
 	tx, _ := db.Begin()
@@ -149,7 +162,7 @@ func EventCoinTypeAdd(db *pg.DB, logger log.Logger, evt *types.Event) {
 	tx.Commit()
 }
 
-func EventCoinTypeModifySupply(db *pg.DB, logger log.Logger, evt *types.Event) {
+func EventCoinTypeModifySupply(db *pg.DB, logger log.Logger, evt *types.Event, isBurn bool) {
 	var CoinTypeMsg EventCoinType
 	err := eventutil.UnmarshalKVMap(evt.Attributes, &CoinTypeMsg)
 	if err != nil {
@@ -157,7 +170,11 @@ func EventCoinTypeModifySupply(db *pg.DB, logger log.Logger, evt *types.Event) {
 		return
 	}
 
-	m := makeCtpSql(CoinTypeMsg)
+	m, err := makeCtpSql(CoinTypeMsg, isBurn)
+	if err != nil {
+		EventErr(db, logger, NewErrMsg(err))
+		return
+	}
 	logger.Debug("EventCoinTypeModifySupply", "\n", *evt, "\n", CoinTypeMsg, "\n", m)
 
 	tx, _ := db.Begin()

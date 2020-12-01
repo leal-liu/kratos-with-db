@@ -20,10 +20,10 @@ func InsertEvent(db *pg.DB, logger log.Logger, evt *types.Event) error {
 	if evt.Type == "create" { //asset
 		EventCoinTypeAdd(db, logger, evt)
 	} else if evt.Type == "issue" {
-		EventCoinTypeModifySupply(db, logger, evt)
+		EventCoinTypeModifySupply(db, logger, evt, false)
 		EventAccCoinsAdd(db, logger, evt)
 	} else if evt.Type == "burn" {
-		EventCoinTypeModifySupply(db, logger, evt)
+		EventCoinTypeModifySupply(db, logger, evt, true)
 		EventAccCoinsReduce(db, logger, evt)
 	} else if evt.Type == "transfer" {
 		EventAccCoinsMove(db, logger, evt)
