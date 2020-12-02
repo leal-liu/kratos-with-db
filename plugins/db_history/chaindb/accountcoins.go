@@ -15,7 +15,7 @@ import (
 type EventAccCoins struct {
 	Height               int64  `json:"height"`
 	Amount               string `json:"amount"`
-	Account              string `json:"creator"`
+	Account              string `json:"account"`
 	From                 string `json:"from"`
 	To                   string `json:"to"`
 	DestinationValidator string `json:"destination_validator"`

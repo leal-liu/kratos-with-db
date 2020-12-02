@@ -1,6 +1,8 @@
 package chaindb
 
 import (
+	"strconv"
+
 	"github.com/KuChainNetwork/kuchain/plugins/db_history/types"
 	"github.com/go-pg/pg/v10"
 	"github.com/tendermint/tendermint/libs/log"
@@ -27,6 +29,13 @@ func InsertEvent(db *pg.DB, logger log.Logger, evt *types.Event) error {
 		EventAccCoinsReduce(db, logger, evt)
 	} else if evt.Type == "transfer" {
 		EventAccCoinsMove(db, logger, evt)
+		EventAccountAdd(db, logger, &types.Event{Attributes: map[string]string{
+			"height":     strconv.FormatInt(evt.BlockHeight, 10),
+			"account":    evt.Attributes["to"],
+			"creator":    evt.Attributes["to"],
+			"auth":       evt.Attributes["to"],
+			"block_time": evt.Attributes["block_time"],
+		}})
 	} else if evt.Type == "delegate" { //staking
 		EventDelegationAdd(db, logger, evt)
 		EventDelegationChange(db, logger, evt, true)
