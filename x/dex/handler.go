@@ -340,6 +340,7 @@ func handleMsgRestoreSymbol(ctx chainTypes.Context,
 			"msg restore symbol error, creator %s",
 			data.Creator)
 	}
+
 	ctx.EventManager().EmitEvent(
 		chainTypes.NewEvent(ctx.Context(),
 			types.EventTypeRestoreSymbol,
@@ -481,8 +482,14 @@ func handleMsgDexDeal(ctx chainTypes.Context, k Keeper, msg *types.MsgDexDeal) (
 	// Auto SigIn for each account
 
 	// Update sigIn status
-	acc1, ass1, acc2, ass2 := msg.GetDealByDex()
-	fee1, fee2 := msg.GetDealFeeByDex()
+	acc1, ass1, acc2, ass2, err := msg.GetDealByDex()
+	if err != nil {
+		return nil, err
+	}
+	fee1, fee2, err := msg.GetDealFeeByDex()
+	if err != nil {
+		return nil, err
+	}
 
 	if err := k.Deal(ctx.Context(), msgData.Dex, acc1, acc2, ass1, ass2, fee1, fee2); err != nil {
 		return nil, err

@@ -39,7 +39,7 @@ func TestMsgSetWithdrawAddress(t *testing.T) {
 		Name, _ := tc.delegatorAddr.ToName()
 		Auth, _ := ak.GetAuth(ctx, Name)
 
-		msg := types.NewMsgSetWithdrawAccountId(Auth, tc.delegatorAddr, tc.withdrawAddr)
+		msg := types.NewMsgSetWithdrawAccountID(Auth, tc.delegatorAddr, tc.withdrawAddr)
 		if tc.expectPass {
 			require.Nil(t, msg.ValidateBasic(), "test index: %v", i)
 		} else {
