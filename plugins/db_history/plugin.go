@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -139,6 +140,36 @@ func New(ctx types.Context, cfg types.BaseCfg) *plugin {
 	return res
 }
 
+func (t *plugin) convertCoin(amountStr string) (amount int64, amountFloat int64, err error) {
+	if len(amountStr) <= 0 {
+		err = fmt.Errorf("amountStr length is 0")
+		return
+	}
+
+	for i, v := range amountStr {
+		if v < '0' || v > '9' {
+			amountStr = amountStr[:i]
+			break
+		}
+	}
+	fmt.Println("------------->convertCoin", amountStr)
+	if len(amountStr) <= 18 {
+		amount = 0
+		amountFloat, err = strconv.ParseInt(amountStr, 10, 64)
+		return
+	}
+
+	amount, err = strconv.ParseInt(amountStr[:len(amountStr)-18], 10, 64)
+	if err != nil {
+		return
+	}
+	amountFloat, err = strconv.ParseInt(amountStr[len(amountStr)-18:], 10, 64)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // startAssetSyncService
 func (t *plugin) startAssetSyncService() {
 	if _, err := orm.NewQuery(t.db.database, &chaindb.CreateAccCoinsModel{}).
@@ -181,12 +212,13 @@ func (t *plugin) startAssetSyncService() {
 							coins, err := syncTool.Sync(m.Account, m.Symbol, syncTimeout)
 							if nil == err {
 								if nil != coins && 0 < len(coins) {
-									coin, err := chaindb.NewCoin(coins[0])
+									amount, amountFloat, err := t.convertCoin(coins[0])
+									//coin, err := chaindb.NewCoin(coins[0])
 									if nil != err {
 										panic(err)
 									}
-									m.Amount = coin.Amount
-									m.AmountFloat = coin.AmountFloat
+									m.Amount = amount
+									m.AmountFloat = amountFloat
 									m.SyncState = 2
 								} else {
 									m.SyncState = 0
